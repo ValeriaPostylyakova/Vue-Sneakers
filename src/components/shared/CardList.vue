@@ -1,49 +1,46 @@
 <script setup lang="ts">
 import Card from '@/components/shared/Card.vue'
-import { onMounted, reactive } from 'vue'
+import type { Sneaker } from '../../../@types/sneakers.ts'
 import axios from 'axios'
 
-defineProps({
-  products: Array,
-})
-
-interface Product {
-  title: string
-  price: number
-  imageUrl: string
+export interface CardListProps {
+  products: Sneaker[]
 }
 
-const products = reactive<Product[]>([])
+const props = defineProps<CardListProps>()
 
 const onClickAdd = () => {
   console.log('add')
 }
 
-const onClickFavorite = () => {
-  console.log('favorite')
-}
-
-onMounted(async () => {
+const onClickFavorite = async (id: number) => {
   try {
-    const { data } = await axios.get<Product[]>('https://3ad519bdc442b341.mokky.dev/sneaker')
-    products.push(...data)
+    const sneaker = props.products.find((product) => product.id === id)
+
+    if (!sneaker) {
+      return
+    }
+
+    await axios.post(`https://125448a15992a523.mokky.dev/favorites`, { ...sneaker, parentId: id })
   } catch (e) {
     console.log(e)
   }
-})
+}
 </script>
 
 <template>
   <div class="grid grid-cols-4 gap-10">
     <Card
-      v-for="product in products"
-      :key="product.title"
+      v-for="product in props.products"
+      :key="product.id"
+      :id="product.id"
       :title="product.title"
       :price="product.price"
-      :imageUrl="`/sneakers/${product.imageUrl}.jpg`"
+      :imageUrl="product.imageUrl"
       is-favorite
       :onClickAdd="onClickAdd"
       :onClickFavorite="onClickFavorite"
+      :isFavorite="product.isFavorite"
     />
   </div>
 </template>
